@@ -7,39 +7,31 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include <time.h>
 
 #define NUM_THREADS 3
 #define NUM_RANDOMS 500
 #define NUM_CHILD_THREADS 10
-#define NUM_READS_PER_THREAD (NUM_RANDOMS * NUM_THREADS/NUM_CHILD_THREADS)
+#define NUM_READS_PER_THREAD (NUM_RANDOMS * NUM_THREADS / NUM_CHILD_THREADS)
 
 int pipefd[2];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 void *rng(void *arg) {
-    int i;
     int numbers[NUM_RANDOMS];
-
-    for (i = 0; i < NUM_RANDOMS; i++) {
+    for (int i = 0; i < NUM_RANDOMS; i++) {
         numbers[i] = rand() % 1001;
     }
-
-    pthread_mutex_lock(&mutex);
     write(pipefd[1], numbers, sizeof(numbers));
-    pthread_mutex_unlock(&mutex);
-
     return NULL;
 }
 
-void *sum(void *arg) {
+
+void *calculate_sum(void *arg) {
     int sum = 0;
     int numbers[NUM_READS_PER_THREAD];
 
-    pthread_mutex_lock(&mutex);
     read(pipefd[0], numbers, sizeof(numbers));
-    pthread_mutex_unlock(&mutex);
-
     for (int i = 0; i < NUM_READS_PER_THREAD; i++) {
         sum += numbers[i];
     }
@@ -48,8 +40,20 @@ void *sum(void *arg) {
 }
 
 
+void thread_count(int parent_count, int child_count) {
+    FILE *file = fopen("thread_count.txt", "w");
+    if (file != NULL) {
+        fprintf(file, "Parent Threads Created: %d\n", parent_count);
+        fprintf(file, "Child Threads Created: %d\n", child_count);
+        fclose(file);
+    } else {
+        perror("Error file could not be open and written");
+    }
+}
 
 int main() {
+    srand(time(NULL));
+
     pthread_t threads[NUM_THREADS];
     pid_t child_pid;
 
@@ -62,9 +66,11 @@ int main() {
         pthread_create(&threads[i], NULL, rng, NULL);
     }
 
+
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
+
 
     child_pid = fork();
     if (child_pid == -1) {
@@ -76,9 +82,11 @@ int main() {
         pthread_t child_threads[NUM_CHILD_THREADS];
         long total_sum = 0;
 
+
         for (int i = 0; i < NUM_CHILD_THREADS; i++) {
-            pthread_create(&child_threads[i], NULL, sum, NULL);
+            pthread_create(&child_threads[i], NULL, calculate_sum, NULL);
         }
+
 
         for (int i = 0; i < NUM_CHILD_THREADS; i++) {
             long thread_sum;
@@ -86,13 +94,13 @@ int main() {
             total_sum += thread_sum;
         }
 
-        double average = (double)total_sum / (NUM_CHILD_THREADS * NUM_READS_PER_THREAD);
+        double average = (double)total_sum / (NUM_RANDOMS * NUM_THREADS);
 
-        FILE *file = fopen("avg.txt", "w");
+
+        FILE *file = fopen("average.txt", "w");
         if (file != NULL) {
-            fprintf(file, "Avg: %.2f\n", average);
-            fclose(file);
-        } else {
+            fprintf(file, "Average: %.2f\n", average);
+            fclose(file); } else {
             perror("Could not open file for writing");
         }
 
@@ -102,6 +110,8 @@ int main() {
         wait(NULL);
         close(pipefd[0]);
 
+
+        thread_count(NUM_THREADS, NUM_CHILD_THREADS);
     }
 
     return 0;
