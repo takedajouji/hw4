@@ -3,4 +3,4 @@ project(hw4 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(hw4 main.c)
+add_executable(hw4 hw4.c)

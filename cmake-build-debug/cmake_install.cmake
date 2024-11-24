@@ -1,4 +1,4 @@
-# Install script for directory: /Users/jvtakeda/CLionProjects/Lab-12
+# Install script for directory: /Users/jvtakeda/CLionProjects/hw4
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/jvtakeda/CLionProjects/Lab-12/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/jvtakeda/CLionProjects/hw4/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
