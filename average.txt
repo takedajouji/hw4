@@ -1,1 +1,1 @@
-Average: 500.97
+Average of sums calculated by child process: 76564.60
